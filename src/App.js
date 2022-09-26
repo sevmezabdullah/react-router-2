@@ -12,6 +12,8 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from './api/posts';
 
+import EditPost from './components/EditPost';
+
 function App() {
   const [search, setSearch] = useState('');
   const [posts, setPosts] = useState([
@@ -629,6 +631,9 @@ function App() {
   const [postBody, setPostBody] = useState('');
   const [postTitle, setPostTitle] = useState('');
 
+  const [editTitle, setEditTitle] = useState('');
+  const [editBody, setEditBody] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1;
@@ -637,17 +642,39 @@ function App() {
 
     try {
       const response = await api.post('/posts', newPost);
-      const allPosts = [...posts, newPost];
+      const allPosts = [...posts, response.data];
       setPosts(allPosts);
       setPostTitle('');
       setPostBody('');
       navigate('/');
     } catch (error) {}
   };
-  const handleDelete = (id) => {
-    const postsList = posts.filter((post) => post.id !== id);
-    setPosts(postsList);
-    navigate('/');
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/posts/${id}`);
+      const postsList = posts.filter((post) => post.id !== id);
+      setPosts(postsList);
+      navigate('/');
+    } catch (error) {
+      console.log(`Error: ${error.message}`);
+    }
+  };
+
+  const handleEdit = async (id) => {
+    const datetime = format(new Date(), 'MMMM dd, yyyy pp');
+    const updatedPost = { id, title: editTitle, datetime, body: editBody };
+
+    try {
+      const response = await api.put(`/posts/${id}`, updatedPost);
+      setPosts(
+        posts.map((post) => (post.id === id ? { ...response.data } : post))
+      );
+      setEditTitle('');
+      setEditBody('');
+      navigate('/');
+    } catch (error) {
+      console.log(`Error : ${error.message}`);
+    }
   };
   useEffect(() => {
     const filteredResults = posts.filter(
@@ -696,6 +723,19 @@ function App() {
           <Route
             path="/post/:id"
             element={<PostPage posts={posts} handleDelete={handleDelete} />}
+          />
+          <Route
+            path="/edit/:id"
+            element={
+              <EditPost
+                posts={posts}
+                handleEdit={handleEdit}
+                editBody={editBody}
+                setEditBody={setEditBody}
+                editTitle={editTitle}
+                setEditTitle={setEditTitle}
+              />
+            }
           />
           <Route path="/about" element={<About />} />
           <Route path="/*" element={<Missing />} />

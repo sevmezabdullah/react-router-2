@@ -11,8 +11,9 @@ import { format } from 'date-fns';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from './api/posts';
-
 import EditPost from './components/EditPost';
+
+import useWindowSize from './hooks/useWindowsSize';
 
 function App() {
   const [search, setSearch] = useState('');
@@ -633,7 +634,7 @@ function App() {
 
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
-
+  const { width } = useWindowSize();
   const handleSubmit = async (e) => {
     e.preventDefault();
     const id = posts.length ? posts[posts.length - 1].id + 1 : 1;
@@ -705,7 +706,7 @@ function App() {
   return (
     <>
       <div className="App">
-        <Header title="React JS Blog" />
+        <Header title="React JS Blog" width={width} />
         <Nav search={search} setSearch={setSearch} />
         <Routes>
           <Route path="/" exact element={<Home posts={searchResult} />} />
